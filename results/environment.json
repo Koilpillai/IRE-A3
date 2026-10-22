@@ -1,0 +1,23 @@
+{
+  "cpu": "13th Gen Intel(R) Core(TM) i7-13650HX",
+  "physical_cores": 10,
+  "logical_cpus": 20,
+  "ram_gib": 7.6,
+  "os": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "python": "3.11.7",
+  "libraries": {
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "h5py": "3.16.0",
+    "faiss-cpu": "1.15.1",
+    "hnswlib": "0.8.0",
+    "matplotlib": "3.11.2",
+    "pandas": "3.0.6",
+    "pytest": "9.1.1",
+    "tqdm": "4.70.1"
+  },
+  "faiss_compile_options": "OPTIMIZE DD AVX2 ",
+  "faiss_blas_threshold": 128000,
+  "git_commit": "d4bfc1942e5024c8f03b9df8a353038c06d1ecfb",
+  "git_dirty": true
+}

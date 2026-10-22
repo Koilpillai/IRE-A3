@@ -1,2 +1,7 @@
 dependencies.txt
+A3.pdf
 /venv/
+/data/
+/results_quick/
+__pycache__/
+.pytest_cache/
