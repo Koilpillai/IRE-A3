@@ -20,15 +20,30 @@ def make_row(**fields) -> dict:
     return {c: json.dumps(v) if isinstance(v, (dict, list)) else v for c, v in row.items()}
 
 
-def replace_part(path: str | Path, part: str, rows: list[dict]) -> None:
-    """Write `rows` into the csv, replacing any rows of `part` from an earlier run and keeping the others."""
+def read_rows(path: str | Path) -> list[dict]:
+    """All rows of the csv (strings, as stored); empty if the file does not exist."""
     path = Path(path)
-    kept = []
-    if path.exists():
-        with open(path, newline="") as f:
-            kept = [r for r in csv.DictReader(f) if r["part"] != part]
+    if not path.exists():
+        return []
+    with open(path, newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def _write(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=COLUMNS)
         writer.writeheader()
-        writer.writerows(kept + rows)
+        writer.writerows(rows)
+
+
+def replace_part(path: str | Path, part: str, rows: list[dict]) -> None:
+    """Write `rows` into the csv, replacing any rows of `part` from an earlier run and keeping the others."""
+    path = Path(path)
+    _write(path, [r for r in read_rows(path) if r["part"] != part] + rows)
+
+
+def append_rows(path: str | Path, rows: list[dict]) -> None:
+    """Add `rows` to the csv (used by long runs, so that finished work is saved as it goes)."""
+    path = Path(path)
+    _write(path, read_rows(path) + rows)
