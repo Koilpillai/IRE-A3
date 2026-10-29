@@ -1,6 +1,6 @@
 # CS4.406 Assignment 3 — Benchmarking approximate nearest neighbour search
 
-Status: Parts 1 (exact baseline) and 2 (benchmark of three indexes) are implemented. Parts 3–5 are not yet.
+Status: Parts 1 (exact baseline), 2 (benchmark of three indexes) and 3 (compression experiment) are implemented. Parts 4–5 are not yet.
 
 ## Setup
 
@@ -23,7 +23,8 @@ Run on an otherwise idle machine: every number in `results.csv` is a wall-clock 
 The machine and library versions of a run are saved next to its results in `environment.json`.
 
 On the full data Part 1 takes about 35 minutes (one-query-at-a-time exact search over 1M vectors is slow by
-design) and Part 2 about 3-4 hours; `--quick` takes about 8 minutes in total (measured: 8 min 19 s on the development machine). Run the tests alone with `python -m pytest`.
+design), Part 2 about 3-4 hours and Part 3 about 25 minutes; `--quick` takes about 12 minutes in total (measured: 12 min 21 s for the whole of `run_all.sh --quick` on the
+development machine, a fast laptop CPU; a slower machine may need longer). Run the tests alone with `python -m pytest`.
 
 ## Conventions (all parts)
 
@@ -72,14 +73,34 @@ If `import hnswlib` fails with `GLIBCXX_3.4.xx not found` (Anaconda-based Python
 libstdc++ automatically; when running the scripts by hand use
 `LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6 python part2_benchmark.py`.
 
+## Part 3
+
+The experiment is the "Compression" option: on SIFT, vary the number of PQ sub-vectors and compare plain IVF-PQ with IVF-PQ
+followed by exact re-ranking of the top 100 candidates. The hypothesis is in `part3_hypothesis.md`; it was committed
+(`c8c6adc`) before any Part 3 code or result existed, and the answers are in `part3.md`.
+
+`part3_benchmark.py` builds IVF-PQ (`nlist` = 1024, the same as in Part 2) for m in {16, 32, 64, 128}. Each index is
+searched in two ways that share the same codes and the same `nprobe`: plain, and wrapped in FAISS `IndexRefineFlat` (top 100
+re-ranked against the original vectors, which stay in memory and are counted in the index size). `nprobe` is swept as in Part 2
+(capped at 256; `ceiling_check` rows give the recall at `nprobe` = `nlist`). The `candidate_recall` rows give the share of
+the true top 10 inside the PQ top 100 (1,000 tune queries, batch search, not timed), the most re-ranking could recover.
+It reuses the `sweep` and `measure` functions of `part2_benchmark.py`, so the timing method is identical. `--resume`
+skips values of m that are finished.
+
+`part3_report.py` makes `results/figures/part3_compression.png/pdf` (recall against speed; memory against the recall
+reached) and `results/tables/part3_*.md/csv`. Settings for the 0.90 and 0.95 targets are chosen on the tune half, numbers
+come from the report half, as in Part 2. The IVF-Flat reference row is Part 2's sweep with the same `nlist`.
+
 ## Layout
 
 | path | contents |
 |---|---|
-| `annbench/` | `recall.py` recall@k, `timing.py` timing, `exact.py` FAISS exact search, `indexes.py` the three indexes, `analysis.py` sweep stopping / frontier / selection, `data.py` HDF5 loading, `results.py` results.csv, `env.py` machine/versions |
+| `annbench/` | `recall.py` recall@k, `timing.py` timing, `exact.py` FAISS exact search, `indexes.py` the three indexes and the re-ranked IVF-PQ, `analysis.py` sweep stopping / frontier / selection, `data.py` HDF5 loading, `results.py` results.csv, `env.py` machine/versions |
 | `part1_exact.py` | Part 1 |
-| `part1.md`, `part2.md` | written answers for Parts 1 and 2 (to go into the report) |
+| `part1.md`, `part2.md`, `part3.md` | written answers for Parts 1 to 3 (to go into the report) |
+| `part3_hypothesis.md` | the Part 3 hypothesis, committed before the experiment was run |
 | `part2_benchmark.py`, `part2_report.py` | Part 2: run the sweeps; make the figures and tables |
-| `tests/` | unit tests (recall function, exact search, indexes, sweep analysis) |
+| `part3_benchmark.py`, `part3_report.py` | Part 3: run the experiment; make the figure and tables |
+| `tests/` | unit tests (recall function, exact search, indexes, sweep analysis, re-ranking) |
 | `run_all.sh` | one-command reproduction |
 | `results/`, `results_quick/` | generated: `results.csv`, `environment.json`, `figures/`, `tables/` |

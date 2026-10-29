@@ -39,4 +39,8 @@ echo "== Part 2: benchmark HNSW, IVF-Flat and IVF-PQ"
 "$PYTHON" part2_benchmark.py $QUICK
 "$PYTHON" part2_report.py $QUICK
 
-# Parts 3 and 4 and the report figures are added here as they are implemented.
+echo "== Part 3: compression (IVF-PQ with and without re-ranking)"
+"$PYTHON" part3_benchmark.py $QUICK
+"$PYTHON" part3_report.py $QUICK
+
+# Part 4 and the report figures are added here as they are implemented.

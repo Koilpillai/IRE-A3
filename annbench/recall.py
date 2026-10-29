@@ -24,6 +24,17 @@ def true_distances(queries: np.ndarray, base: np.ndarray, ids: np.ndarray, chunk
     return out
 
 
+def _repeated(ids: np.ndarray) -> np.ndarray:
+    """True where an id already appeared earlier in its row."""
+    order = np.argsort(ids, axis=1, kind="stable")
+    sorted_ids = np.take_along_axis(ids, order, axis=1)
+    repeated_sorted = np.zeros(ids.shape, dtype=bool)
+    repeated_sorted[:, 1:] = sorted_ids[:, 1:] == sorted_ids[:, :-1]
+    repeated = np.empty_like(repeated_sorted)
+    np.put_along_axis(repeated, order, repeated_sorted, axis=1)
+    return repeated
+
+
 def per_query_recall_at_k(found_ids, found_dists, ref_dists, k: int = 10, rtol: float = 1e-6) -> np.ndarray:
     """Recall@k of every query, in [0, 1].
 
@@ -42,14 +53,22 @@ def per_query_recall_at_k(found_ids, found_dists, ref_dists, k: int = 10, rtol: 
     threshold = ref_dists.max(axis=1, keepdims=True) * (1.0 + rtol)
     correct = (found_ids >= 0) & (found_dists <= threshold)
 
-    order = np.argsort(found_ids, axis=1, kind="stable")
-    sorted_ids = np.take_along_axis(found_ids, order, axis=1)
-    repeated_sorted = np.zeros_like(correct)
-    repeated_sorted[:, 1:] = sorted_ids[:, 1:] == sorted_ids[:, :-1]
-    repeated = np.empty_like(repeated_sorted)
-    np.put_along_axis(repeated, order, repeated_sorted, axis=1)
+    return (correct & ~_repeated(found_ids)).sum(axis=1) / k
 
-    return (correct & ~repeated).sum(axis=1) / k
+
+def candidate_recall_at_k(found_ids, found_dists, ref_dists, k: int = 10, rtol: float = 1e-6) -> float:
+    """Mean fraction of the k true neighbours that appear anywhere in a longer candidate list (any number of columns).
+
+    Same rule as `per_query_recall_at_k` (a candidate is correct if it is no farther than the k-th true neighbour; a
+    repeated id counts once), but over all columns of `found_*`, not only the first k. It is what re-ranking can at
+    best recover from the candidates. Capped at 1 per query, since ties can put more than k candidates within reach.
+    """
+    found_ids, found_dists, ref_dists = (np.asarray(a) for a in (found_ids, found_dists, ref_dists))
+    if ref_dists.shape[1] < k:
+        raise ValueError(f"need at least k={k} columns in ref_dists")
+    threshold = ref_dists[:, :k].max(axis=1, keepdims=True) * (1.0 + rtol)
+    correct = (found_ids >= 0) & (found_dists <= threshold) & ~_repeated(found_ids)
+    return float(np.minimum(correct.sum(axis=1) / k, 1.0).mean())
 
 
 def recall_at_k(found_ids, found_dists, ref_dists, k: int = 10, rtol: float = 1e-6) -> float:

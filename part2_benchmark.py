@@ -45,19 +45,15 @@ def measure(index, queries: np.ndarray, base: np.ndarray, ref_dists: np.ndarray,
             **summarise(seconds, len(queries))}
 
 
-def benchmark_config(index, ds: Dataset, ref_dists: np.ndarray, repeats: int, threads: int, common: dict) -> list[dict]:
-    """Build `index`, sweep its search parameter, and return the results rows."""
-    rows = []
-    build = index.build(ds.base, threads)
-    size = index.size_bytes()
-    common = dict(common, build_params=index.params, build_seconds=build["build_seconds"], index_bytes=size,
-                  bytes_per_vector=size / len(ds.base), notes=build)
-    print(f"  {index.kind} {json.dumps(index.params)}: built in {build['build_seconds']:.1f}s, "
-          f"{size / len(ds.base):.0f} bytes/vector", flush=True)
+def sweep(index, ds: Dataset, ref_dists: np.ndarray, repeats: int, common: dict, grid: list[int]) -> list[dict]:
+    """Rows for `index` at each search-parameter value of `grid` in turn, stopping early once recall levels off.
 
+    The tune half is timed once and the report half `repeats` times; both give recall@10 and speed.
+    """
+    rows = []
     tune_q, report_q = ds.queries[ds.tune], ds.queries[ds.report]
     recalls = []
-    for value in index.search_grid():
+    for value in grid:
         index.set_search(value)
         tune = measure(index, tune_q, ds.base, ref_dists[ds.tune], repeats=1)
         report = measure(index, report_q, ds.base, ref_dists[ds.report], repeats=repeats)
@@ -69,6 +65,20 @@ def benchmark_config(index, ds: Dataset, ref_dists: np.ndarray, repeats: int, th
         recalls.append(tune["recall_at_10"])
         if should_stop(recalls):
             break
+    return rows
+
+
+def benchmark_config(index, ds: Dataset, ref_dists: np.ndarray, repeats: int, threads: int, common: dict) -> list[dict]:
+    """Build `index`, sweep its search parameter, and return the results rows."""
+    build = index.build(ds.base, threads)
+    size = index.size_bytes()
+    common = dict(common, build_params=index.params, build_seconds=build["build_seconds"], index_bytes=size,
+                  bytes_per_vector=size / len(ds.base), notes=build)
+    print(f"  {index.kind} {json.dumps(index.params)}: built in {build['build_seconds']:.1f}s, "
+          f"{size / len(ds.base):.0f} bytes/vector", flush=True)
+
+    rows = sweep(index, ds, ref_dists, repeats, common, index.search_grid())
+    tune_q = ds.queries[ds.tune]
 
     if index.kind == "IVF-PQ":   # scanning every list leaves only the error of the compression itself
         index.set_search(index.params["nlist"])

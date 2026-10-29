@@ -18,6 +18,6 @@
   },
   "faiss_compile_options": "OPTIMIZE DD AVX2 ",
   "faiss_blas_threshold": 128000,
-  "git_commit": "4c068922efdda5e58f1ca3edaa2c93aac69485c8",
+  "git_commit": "c8c6adc1d834e3cadc2d39612a04f73f692a184e",
   "git_dirty": true
 }

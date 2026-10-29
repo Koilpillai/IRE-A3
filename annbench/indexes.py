@@ -103,6 +103,37 @@ class IVFPQ(_IVF):
         return faiss.IndexIVFPQ(self.quantizer, d, self.params["nlist"], self.params["m"], 8)
 
 
+class RefinedIVFPQ:
+    """An IVF-PQ index whose top `candidates` results are re-ranked with exact distances to the stored vectors.
+
+    It wraps an already built `IVFPQ`, so the plain and the re-ranked version search the very same codes and lists
+    (and share nprobe); only the re-ranking differs. The original vectors are not copied, but they have to stay in
+    memory, and they are counted in `size_bytes`.
+    """
+    kind = "IVF-PQ+rerank"
+    search_param = "nprobe"
+
+    def __init__(self, plain: IVFPQ, base: np.ndarray, candidates: int = 100):
+        self.plain = plain
+        self.params = dict(plain.params, candidates=candidates)
+        self.base = np.ascontiguousarray(base, dtype=np.float32)   # the refine index points into this array
+        self.index = faiss.IndexRefineFlat(plain.index, faiss.swig_ptr(self.base))
+        self.index.k_factor = candidates / K
+
+    def search_grid(self) -> list[int]:
+        return self.plain.search_grid()
+
+    def set_search(self, value: int) -> None:
+        self.plain.set_search(value)
+
+    def search(self, row: np.ndarray) -> np.ndarray:
+        return self.index.search(row, K)[1]
+
+    def size_bytes(self) -> int:
+        """Size of the serialised index: the PQ codes, ids and centroids plus the original vectors."""
+        return int(faiss.serialize_index(self.index).nbytes)
+
+
 KINDS = {"hnsw": HNSW, "ivfflat": IVFFlat, "ivfpq": IVFPQ}
 
 
