@@ -1,0 +1,7 @@
+| index | build on the old vectors (s) | adding the new vectors (s, median over shifts) | retrain / rebuild on all vectors (s, median over shifts) | rebuild / add |
+|---|---|---|---|---|
+| HNSW | 3.2 | 3.0 | 9.5 | 3x |
+| IVF-Flat | 0.8 | 0.1 | 1.2 | 17x |
+| IVF-PQ | 20.3 | 1.3 | 22.9 | 18x |
+
+Builds use all physical cores. HNSW builds are multi-threaded, so their times (and graphs) vary a little between runs.

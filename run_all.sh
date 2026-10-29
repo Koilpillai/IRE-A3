@@ -43,4 +43,8 @@ echo "== Part 3: compression (IVF-PQ with and without re-ranking)"
 "$PYTHON" part3_benchmark.py $QUICK
 "$PYTHON" part3_report.py $QUICK
 
-# Part 4 and the report figures are added here as they are implemented.
+echo "== Part 4: drifting data (synthetic clusters)"
+"$PYTHON" part4_benchmark.py $QUICK
+"$PYTHON" part4_report.py $QUICK
+
+# The report figures are added here as they are implemented.

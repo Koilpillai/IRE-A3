@@ -1,0 +1,4 @@
+index,build setting,search setting (chosen at shift 0),tune recall
+HNSW,"M=16, efConstruction=200",efSearch=64,0.952
+IVF-Flat,nlist=512,nprobe=6,0.978
+IVF-PQ,"nlist=512, m=64",nprobe=6,0.954

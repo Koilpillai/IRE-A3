@@ -27,16 +27,38 @@ class HNSW:
     def __init__(self, params: dict):
         self.params = params
 
-    def build(self, base: np.ndarray, threads: int) -> dict:
+    def build(self, base: np.ndarray, threads: int, capacity: int | None = None) -> dict:
+        """Build on `base`; `capacity` (default: len(base)) is how many vectors the index can hold in all, for `add`."""
         import hnswlib
         n, d = base.shape
         self.index = hnswlib.Index(space="l2", dim=d)
-        self.index.init_index(max_elements=n, ef_construction=self.params["efConstruction"],
+        self.index.init_index(max_elements=capacity or n, ef_construction=self.params["efConstruction"],
                               M=self.params["M"], random_seed=100)
         start = time.perf_counter()
         self.index.add_items(base, np.arange(n), num_threads=threads)
         self.index.set_num_threads(1)
         return {"build_seconds": time.perf_counter() - start}
+
+    def add(self, x: np.ndarray, threads: int) -> dict:
+        """Insert `x` into the built index with the next ids (the graph is not rebuilt)."""
+        first = self.index.get_current_count()
+        start = time.perf_counter()
+        self.index.add_items(x, np.arange(first, first + len(x)), num_threads=threads)
+        seconds = time.perf_counter() - start
+        self.index.set_num_threads(1)
+        return {"add_seconds": seconds}
+
+    def copy(self) -> "HNSW":
+        """An independent copy of the built index (same capacity), so that vectors can be added to it separately."""
+        import hnswlib
+        other = HNSW(self.params)
+        other.index = hnswlib.Index(space="l2", dim=self.index.dim)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "hnsw.bin")
+            self.index.save_index(path)
+            other.index.load_index(path, max_elements=self.index.get_max_elements())
+        other.index.set_num_threads(1)
+        return other
 
     def search_grid(self) -> list[int]:
         return EF_GRID
@@ -74,6 +96,19 @@ class _IVF:
             self.index.add(base)
         total = time.perf_counter() - start
         return {"build_seconds": total, "train_seconds": train, "add_seconds": total - train}
+
+    def add(self, x: np.ndarray, threads: int) -> dict:
+        """Add `x` to the built index, each vector to its nearest existing list (nothing is retrained)."""
+        with faiss_threads(threads):
+            start = time.perf_counter()
+            self.index.add(x)
+        return {"add_seconds": time.perf_counter() - start}
+
+    def copy(self) -> "_IVF":
+        """An independent copy of the built index, so that vectors can be added to it separately."""
+        other = type(self)(self.params)
+        other.index = faiss.clone_index(self.index)
+        return other
 
     def search_grid(self) -> list[int]:
         return [p for p in NPROBE_GRID if p <= self.params["nlist"]]
