@@ -38,13 +38,13 @@ barely closer than its other points, which the Part 3 query-difficulty experimen
 
 **Why an index fails to reach high recall.** Only IVF-PQ fails to reach 0.95 for most of its settings. With 2 or more
 dimensions per code byte (SIFT m <= 64, GloVe m <= 50) its recall tops out at 0.88 (SIFT) and 0.87 (GloVe), and with 4 or
-more dimensions per byte at 0.73 or lower (SIFT) and 0.53 or lower (GloVe). This is not a search-effort problem: scanning
+more dimensions per byte at 0.75 or lower (SIFT) and 0.55 or lower (GloVe). This is not a search-effort problem: scanning
 every list (nprobe = nlist) gives the same recall (`part2_recall_ceilings.md`: 0.872 against 0.881 for SIFT m=64, 0.867
 against 0.868 for GloVe m=50). The distance the index ranks by is computed from the 8-bit PQ codes, and the error of that
 approximation is larger than the gap between the 10th neighbour and the points just behind it, so true neighbours are
 ranked below others however many lists are scanned. Only one dimension per byte (m = d, four times smaller than raw
 floats) gets past 0.95, and even then the ceiling is 0.97. Without re-ranking against the stored vectors there is no way
-back; that comparison is the Part 3 "compression" option. HNSW with M=8 on GloVe also did not reach 0.95 (0.949 at efSearch
+back; that comparison is the Part 3 "compression" option. HNSW with M=8 on GloVe also did not reach 0.95 (0.9498 at efSearch
 4096, the largest value tried, and still rising), whereas M=16 and M=32 reached 0.99; I did not test why, a sparser graph
 simply needed a far wider beam.
 

@@ -39,5 +39,7 @@ trains codebooks.
 **Not tested, and how far to trust this.** Gradual drift, deletions, rotations, new clusters, other dimensions or sizes, real data, other `nlist` or
 `M`, other seeds. HNSW graphs differ between runs: an earlier run of the same experiment (3 timing repeats, since replaced because each
 timing was too short) gave HNSW recalls that differed by up to 0.04 for the same build (for example 0.916 against 0.959 for the rebuilt index at shift 1); its IVF recalls were identical. So HNSW
-recall differences below about 0.04 mean nothing here. Speeds from single runs of 1,000 queries vary by about 10%; only the
-IVF-Flat slowdown at shift 4 (0.67 here, 0.72 in the earlier run) and the HNSW gap (0.90 to 0.93, 0.85 to 0.89 earlier) appeared in both runs.
+recall differences below about 0.04 mean nothing here. Speeds are noisy: the QPS of the same index and shift was up to 28% higher
+in this run than in the earlier one, and within a run the slowest of the 15 passes is 6% to 80% slower than the fastest (column 'spread' of
+`part4_summary.md`). Only the IVF-Flat slowdown at shift 4 (stale / retrained 0.67 here, 0.72 in the earlier run) and the HNSW gap (0.90 to 0.93,
+0.85 to 0.89 earlier) appeared in both runs, so read the other speed differences as noise.
