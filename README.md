@@ -1,6 +1,6 @@
 # CS4.406 Assignment 3 — Benchmarking approximate nearest neighbour search
 
-Status: Parts 1 (exact baseline), 2 (benchmark of three indexes), 3 (compression experiment) and 4 (drifting data) are implemented. Part 5 (the report) is not yet.
+Status: Parts 1 (exact baseline), 2 (benchmark of three indexes), 3 (compression experiment), 4 (drifting data) and 5 (the report) are implemented.
 
 ## Setup
 
@@ -113,17 +113,29 @@ build / add times and the diagnostics: vectors scanned per query and list sizes 
 new vectors (IVF-PQ). `part4_report.py` makes `results/figures/part4_drift.png/pdf` and `results/tables/part4_*.md/csv`.
 HNSW builds are multi-threaded and not deterministic, so HNSW recall can differ by a few points between two identical builds.
 
+`results/earlier_run_part4_3repeats.csv` holds the Part 4 rows of a first run with 3 timing repeats, which I replaced by the 15-repeat run in
+`results.csv`. It is kept only as evidence for the statements about run-to-run variation (HNSW recall, speed); `run_all.sh` does not regenerate it.
+
+## Part 5
+
+`part5_report.py` builds `report.pdf` (at most 5 pages; it stops with an error if it is longer) with reportlab. The tables and figures are
+read from `results/results.csv`, `results/tables/` and `results/figures/`, so they are regenerated with everything else. The sentences around them
+are written by hand and quote the numbers of the full run: if you re-run the benchmarks, the wall-clock numbers will move a little and the text
+will not follow. With `--quick` it writes `results_quick/report.pdf` with the quick numbers in the tables and a note on page 1. Use
+`python part5_report.py --author "Name, roll number"` to print a name under the title.
+
 ## Layout
 
 | path | contents |
 |---|---|
 | `annbench/` | `recall.py` recall@k, `timing.py` timing, `exact.py` FAISS exact search, `indexes.py` the three indexes and the re-ranked IVF-PQ, `drift.py` the Part 4 data generator, `analysis.py` sweep stopping / frontier / selection, `data.py` HDF5 loading, `results.py` results.csv, `env.py` machine/versions |
 | `part1_exact.py` | Part 1 |
-| `part1.md`, `part2.md`, `part3.md`, `part4.md` | written answers for Parts 1 to 4 (to go into the report) |
+| `part1.md`, `part2.md`, `part3.md`, `part4.md` | the longer written answers for Parts 1 to 4 that the report was trimmed from |
 | `part3_hypothesis.md`, `part4_hypothesis.md` | the Part 3 and Part 4 hypotheses, each committed before its experiment was run |
 | `part2_benchmark.py`, `part2_report.py` | Part 2: run the sweeps; make the figures and tables |
 | `part3_benchmark.py`, `part3_report.py` | Part 3: run the experiment; make the figure and tables |
 | `part4_benchmark.py`, `part4_report.py` | Part 4: run the experiment; make the figure and tables |
+| `part5_report.py` | Part 5: builds `report.pdf` from the tables and figures |
 | `tests/` | unit tests (recall function, exact search, indexes, sweep analysis, re-ranking, drift generator) |
 | `run_all.sh` | one-command reproduction |
 | `results/`, `results_quick/` | generated: `results.csv`, `environment.json`, `figures/`, `tables/` |

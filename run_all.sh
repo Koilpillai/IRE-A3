@@ -47,4 +47,5 @@ echo "== Part 4: drifting data (synthetic clusters)"
 "$PYTHON" part4_benchmark.py $QUICK
 "$PYTHON" part4_report.py $QUICK
 
-# The report figures are added here as they are implemented.
+echo "== Part 5: report (report.pdf; results_quick/report.pdf with --quick)"
+"$PYTHON" part5_report.py $QUICK

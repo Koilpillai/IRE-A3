@@ -5,7 +5,7 @@ import subprocess
 import sys
 from importlib.metadata import PackageNotFoundError, version
 
-LIBRARIES = ["numpy", "scipy", "h5py", "faiss-cpu", "hnswlib", "matplotlib", "pandas", "pytest", "tqdm"]
+LIBRARIES = ["numpy", "scipy", "h5py", "faiss-cpu", "hnswlib", "matplotlib", "reportlab", "pandas", "pytest", "tqdm"]
 
 
 def _cpu_model() -> str:
