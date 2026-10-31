@@ -131,7 +131,10 @@ will not follow. With `--quick` it writes `results_quick/report.pdf` with the qu
 | `annbench/` | `recall.py` recall@k, `timing.py` timing, `exact.py` FAISS exact search, `indexes.py` the three indexes and the re-ranked IVF-PQ, `drift.py` the Part 4 data generator, `analysis.py` sweep stopping / frontier / selection, `data.py` HDF5 loading, `results.py` results.csv, `env.py` machine/versions |
 | `part1_exact.py` | Part 1 |
 | `part1.md`, `part2.md`, `part3.md`, `part4.md` | the longer written answers for Parts 1 to 4 that the report was trimmed from |
-| `part3_hypothesis.md`, `part4_hypothesis.md` | the Part 3 and Part 4 hypotheses, each committed before its experiment was run |
+| `hypothesis.md` | the Part 3 and Part 4 hypotheses in one file (the submission copy) |
+| `part3_hypothesis.md`, `part4_hypothesis.md` | the same two hypotheses as first committed, each before its experiment was run (see `git log`) |
+| `report.md` | a shorter Markdown version of the report; `report.pdf` is the submitted one |
+| `ai_log/` | `ai_statement.md` (which file is human-written, AI-assisted or AI-generated) and `prompts.md` (the prompt log) |
 | `part2_benchmark.py`, `part2_report.py` | Part 2: run the sweeps; make the figures and tables |
 | `part3_benchmark.py`, `part3_report.py` | Part 3: run the experiment; make the figure and tables |
 | `part4_benchmark.py`, `part4_report.py` | Part 4: run the experiment; make the figure and tables |
